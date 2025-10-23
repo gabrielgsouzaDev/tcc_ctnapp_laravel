@@ -14,47 +14,49 @@ use App\Http\Controllers\PlanoController;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-| Rotas públicas e protegidas (middleware) para cada tipo de usuário.
+| Aqui definimos rotas públicas e protegidas com middleware para cada tipo
+| de usuário.
 */
 
-// -------------------- PUBLICAS --------------------
-// Login e cadastro
-Route::post('/login-responsavel', [ResponsavelController::class,'login']);
-Route::post('/cadastrar-responsavel', [ResponsavelController::class,'cadastrar']);
+// -------------------- ROTAS PÚBLICAS --------------------
+// Login e cadastro de responsáveis
+Route::post('/login-responsavel', [ResponsavelController::class, 'login']);
+Route::post('/cadastrar-responsavel', [ResponsavelController::class, 'cadastrar']);
 
-Route::post('/login-aluno', [AlunoController::class,'login']);
-Route::post('/cadastrar-admin', [AdminController::class,'cadastrarAdmin']);
+// Login de alunos
+Route::post('/login-aluno', [AlunoController::class, 'login']);
 
-// -------------------- MIDDLEWARE FIREBASE --------------------
-// Usuário precisa estar autenticado via token Firebase
-Route::middleware(['firebase.auth'])->group(function() {
+// Cadastro de admin
+Route::post('/cadastrar-admin', [AdminController::class, 'cadastrarAdmin']);
+
+// -------------------- ROTAS PROTEGIDAS: FIREBASE --------------------
+// Usuário precisa estar autenticado via Firebase
+Route::middleware(['firebase.auth'])->group(function () {
 
     // ---------- RESPONSÁVEL ----------
-    Route::get('/alunos', [AlunoController::class,'listarAlunos']);
-    Route::post('/pedido', [PedidoController::class,'fazerPedido']);
-    Route::get('/historico/{id_aluno}', [PedidoController::class,'historicoPedidos']);
-    Route::post('/update-saldo', [PedidoController::class,'updateSaldo']);
+    Route::get('/alunos', [AlunoController::class, 'listarAlunos']); // Lista alunos do responsável
+    Route::post('/pedido', [PedidoController::class, 'fazerPedido']); // Criar pedido
+    Route::get('/historico/{id_aluno}', [PedidoController::class, 'historicoPedidos']); // Histórico do aluno
+    Route::post('/update-saldo', [PedidoController::class, 'updateSaldo']); // Atualizar saldo do aluno
 
     // ---------- ALUNO ----------
-    Route::get('/saldo/{id_aluno}', [AlunoController::class,'getSaldo']);
-
+    Route::get('/saldo/{id_aluno}', [AlunoController::class, 'getSaldo']); // Consultar saldo
 });
 
-// -------------------- MIDDLEWARE ADMIN --------------------
-// Admin logado (middleware próprio pode ser criado)
-Route::middleware(['auth:api'])->group(function() {
+// -------------------- ROTAS PROTEGIDAS: ADMIN --------------------
+// Admin logado (pode usar middleware próprio ou auth:api)
+Route::middleware(['auth:api'])->group(function () {
 
     // Admin
-    Route::post('/login-admin', [AdminController::class,'login']);
-    Route::get('/admins', [AdminController::class,'listarAdmins']);
+    Route::post('/login-admin', [AdminController::class, 'login']);
+    Route::get('/admins', [AdminController::class, 'listarAdmins']);
 
-    // Plano
-    Route::get('/planos', [PlanoController::class,'listarPlanos']);
-    Route::get('/plano/{id_plano}', [PlanoController::class,'buscarPlano']);
-    Route::post('/plano', [PlanoController::class,'cadastrarPlano']);
+    // Planos
+    Route::get('/planos', [PlanoController::class, 'listarPlanos']);
+    Route::get('/plano/{id_plano}', [PlanoController::class, 'buscarPlano']);
+    Route::post('/plano', [PlanoController::class, 'cadastrarPlano']);
 
-    // Escolas, Cantinas e Cantineiros
-    Route::get('/cantinas/{id_escola}', [CantinaController::class,'listarCantinas']);
-    Route::get('/produtos/{id_cantina}', [ProdutoController::class,'listarProdutos']);
-
+    // Escolas, Cantinas e Produtos
+    Route::get('/cantinas/{id_escola}', [CantinaController::class, 'listarCantinas']);
+    Route::get('/produtos/{id_cantina}', [ProdutoController::class, 'listarProdutos']);
 });

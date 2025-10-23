@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Kreait\Firebase\Factory;
+use Kreait\Firebase\Exception\AuthException;
 
 class FirebaseService
 {
@@ -15,17 +16,25 @@ class FirebaseService
         $this->auth = $factory->createAuth();
     }
 
-    public function verifyToken($idToken)
+    public function verifyToken(string $idToken)
     {
-        return $this->auth->verifyIdToken($idToken);
+        try {
+            return $this->auth->verifyIdToken($idToken);
+        } catch (AuthException $e) {
+            return null; // token inválido
+        }
     }
 
-    public function createUser($email, $senha, $nome)
+    public function createUser(string $email, string $senha, string $nome)
     {
-        return $this->auth->createUser([
-            'email' => $email,
-            'password' => $senha,
-            'displayName' => $nome
-        ]);
+        try {
+            return $this->auth->createUser([
+                'email' => $email,
+                'password' => $senha,
+                'displayName' => $nome
+            ]);
+        } catch (AuthException $e) {
+            return null; // erro ao criar usuário
+        }
     }
 }
