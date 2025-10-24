@@ -6,17 +6,39 @@ use Illuminate\Database\Eloquent\Model;
 
 class Aluno extends Model
 {
-    protected $fillable = ['ra','nome','email','senha_hash','id_escola','uid_firebase'];
+    protected $table = 'tb_aluno'; // nome real da tabela
+    protected $primaryKey = 'id_aluno';
+    public $timestamps = true;
 
-    public function escola() {
-        return $this->belongsTo(Escola::class,'id_escola');
+    protected $fillable = [
+        'ra',
+        'nome',
+        'email',
+        'senha_hash',
+        'id_escola',
+        'uid_firebase'
+    ];
+
+    // Relação com Escola
+    public function escola()
+    {
+        return $this->belongsTo(Escola::class, 'id_escola');
     }
 
-    public function responsaveis() {
-        return $this->belongsToMany(Responsavel::class,'aluno_responsavel','id_aluno','id_responsavel');
+    // Relação com Responsáveis (N:N)
+    public function responsaveis()
+    {
+        return $this->belongsToMany(
+            Responsavel::class,
+            'tb_aluno_responsavel', // nome correto da tabela pivô
+            'id_aluno',
+            'id_responsavel'
+        );
     }
 
-    public function pedidos() {
-        return $this->hasMany(Pedido::class,'id_aluno');
+    // Relação com Pedidos
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'id_aluno');
     }
 }

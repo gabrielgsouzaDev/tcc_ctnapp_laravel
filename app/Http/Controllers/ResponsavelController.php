@@ -5,50 +5,44 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Responsavel;
 use App\Models\Aluno;
-use App\Services\FirebaseService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class ResponsavelController extends Controller
 {
-    protected $firebase;
-
-    public function __construct(FirebaseService $firebase)
-    {
-        $this->firebase = $firebase;
-    }
-
-    public function cadastrar(Request $request)
+    public function register(Request $request)
     {
         $request->validate([
-            'nome'=>'required',
-            'email'=>'required|email|unique:responsaveis,email',
-            'senha'=>'required|min:6',
-            'raAluno'=>'required'
+            'nome' => 'required|string|max:100',
+            'email' => 'required|email|unique:tb_responsavel,email',
+            'senha' => 'required|string|min:6',
+            'ra_aluno' => 'required|string',
+            'uid_firebase' => 'required|string'
         ]);
 
-        $aluno = Aluno::where('ra',$request->raAluno)->first();
-        if(!$aluno) return response()->json(['erro'=>'RA não encontrado'],404);
+        DB::beginTransaction();
 
-        $uid = $this->firebase->criarUsuario($request->email,$request->senha,$request->nome);
+        try {
+            $aluno = Aluno::where('ra', $request->ra_aluno)->first();
+            if (!$aluno) {
+                throw new \Exception('RA do aluno inválido ou não encontrado.');
+            }
 
-        $responsavel = Responsavel::create([
-            'nome'=>$request->nome,
-            'email'=>$request->email,
-            'senha_hash'=>bcrypt($request->senha),
-            'uid_firebase'=>$uid
-        ]);
+            $responsavel = Responsavel::create([
+                'nome' => $request->nome,
+                'email' => $request->email,
+                'senha_hash' => Hash::make($request->senha),
+                'uid_firebase' => $request->uid_firebase,
+            ]);
 
-        $responsavel->alunos()->attach($aluno->id_aluno);
+            $responsavel->alunos()->attach($aluno->id_aluno);
 
-        return response()->json(['sucesso'=>true,'uid'=>$uid]);
-    }
+            DB::commit();
+            return response()->json(['message' => 'Responsável cadastrado com sucesso.'], 201);
 
-    public function login(Request $request)
-    {
-        $request->validate(['idToken'=>'required']);
-        $uid = $this->firebase->verificarToken($request->idToken);
-
-        if(!$uid) return response()->json(['erro'=>'Token inválido'], 401);
-
-        return response()->json(['uid'=>$uid,'sucesso'=>true]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 }

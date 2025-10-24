@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('aluno_responsavel', function (Blueprint $table) {
-    $table->foreignId('id_aluno')->constrained('alunos');
-    $table->foreignId('id_responsavel')->constrained('responsaveis');
-    $table->primary(['id_aluno','id_responsavel']);
+        Schema::create('tb_aluno_responsavel', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('id_aluno');
+    $table->unsignedBigInteger('id_responsavel');
+    $table->timestamps();
+
+    $table->foreign('id_aluno')->references('id_aluno')->on('tb_aluno')->onDelete('cascade');
+    $table->foreign('id_responsavel')->references('id_responsavel')->on('tb_responsavel')->onDelete('cascade');
 });
 
     }
