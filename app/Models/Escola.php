@@ -1,29 +1,23 @@
 <?php
-
 namespace App\Models;
+use Illuminate\Foundation\Auth\User as Authenticatable; // para usar Sanctum token
+use Laravel\Sanctum\HasApiTokens;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Escola extends Model
+class Escola extends Authenticatable
 {
-    protected $fillable = [
-        'nome','cnpj','id_endereco','id_plano','status','qtd_alunos',
-        'email_contato','senha_hash','nm_gerente','telefone_contato'
-    ];
+    use HasApiTokens;
+    protected $table = 'tb_escola';
+    protected $primaryKey = 'id_escola';
+    public $timestamps = false;
+    protected $fillable = ['nome','cnpj','senha_hash','id_endereco','id_plano','status','qtd_alunos'];
+    protected $hidden = ['senha_hash'];
 
-    public function alunos() {
-        return $this->hasMany(Aluno::class, 'id_escola');
-    }
+    // Relações
+    public function cantinas() { return $this->hasMany(Cantina::class, 'id_escola', 'id_escola'); }
+    public function usuarios() { return $this->hasMany(Usuario::class, 'id_escola', 'id_escola'); }
 
-    public function cantinas() {
-        return $this->hasMany(Cantina::class, 'id_escola');
-    }
-
-    public function plano() {
-        return $this->belongsTo(Plano::class, 'id_plano');
-    }
-
-    public function endereco() {
-        return $this->belongsTo(Endereco::class, 'id_endereco');
+    public function getAuthPassword()
+    {
+        return $this->senha_hash;
     }
 }

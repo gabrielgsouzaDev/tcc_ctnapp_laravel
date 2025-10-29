@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
-use App\Services\FirebaseService;
 use Illuminate\Http\Request;
+use App\Services\FirebaseService;
+use Illuminate\Support\Facades\Auth;
 
 class FirebaseAuth
 {
@@ -18,19 +20,26 @@ class FirebaseAuth
     {
         $authHeader = $request->header('Authorization');
 
-        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
             return response()->json(['error' => 'Token não fornecido'], 401);
         }
 
-        $idToken = $matches[1];
-        $verifiedToken = $this->firebase->verifyIdToken($idToken);
+        $idToken = substr($authHeader, 7);
 
-        if (!$verifiedToken) {
+        $verified = $this->firebase->verifyToken($idToken);
+
+        if (!$verified) {
             return response()->json(['error' => 'Token inválido'], 401);
         }
 
-        // Opcional: associar usuário no banco
-        $request->merge(['firebase_user_id' => $verifiedToken->claims()->get('sub')]);
+        $uid = $verified->claims()->get('sub');
+        $role = $verified->claims()->get('role'); // <- se quiser armazenar no Firebase o tipo de usuário
+
+        // Anexa o UID e role ao request
+        $request->merge([
+            'firebase_uid' => $uid,
+            'user_role' => $role ?? 'user',
+        ]);
 
         return $next($request);
     }
